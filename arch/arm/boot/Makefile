@@ -14,9 +14,7 @@
 ifneq ($(MACHINE),)
 include $(srctree)/$(MACHINE)/Makefile.boot
 endif
-include $(srctree)/arch/arm/boot/dts/Makefile
 
-include $(srctree)/arch/arm/boot/dts/Makefile
 ifneq ($(DTSSUBDIR),)
 DTSSUBDIR_INCS=$(foreach DIR, $(DTSSUBDIR), $(addsuffix /Makefile, $(addprefix $(srctree)/arch/arm/boot/dts/, $(DIR))))
 include $(DTSSUBDIR_INCS)
@@ -32,14 +30,15 @@ INITRD_PHYS := $(initrd_phys-y)
 
 export ZRELADDR INITRD_PHYS PARAMS_PHYS
 
-targets := Image zImage xipImage bootpImage uImage
+targets := Image dtb.img
 
-DTB_NAMES := $(subst $\",,$(CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES))
-ifneq ($(DTB_NAMES),)
-DTB_LIST := $(addsuffix .dtb,$(DTB_NAMES))
-else
-DTB_LIST := $(dtb-y)
-endif
+#DTB_NAMES := $(subst $\",,$(CONFIG_BUILD_ARM_APPENDED_DTB_IMAGE_NAMES))
+#ifneq ($(DTB_NAMES),)
+#DTB_LIST := $(addsuffix .dtb,$(DTB_NAMES))
+#else
+#DTB_LIST := $(dtb-y)
+#endif
+
 DTB_OBJS := $(shell find $(obj)/dts/ -name \*.dtb)
 
 ifeq ($(CONFIG_XIP_KERNEL),y)
@@ -74,6 +73,8 @@ $(obj)/zImage-dtb:	$(obj)/zImage $(DTB_OBJS) FORCE
 	$(call if_changed,cat)
 	@echo '  Kernel: $@ is ready'
 
+$(obj)/dtb.img: $(DTB_OBJS) FORCE
+	$(call if_changed,qcdt)
 endif
 
 ifneq ($(LOADADDR),)

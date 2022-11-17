@@ -294,6 +294,12 @@ $(obj)/%.dtb: $(src)/%.dts FORCE
 
 dtc-tmp = $(subst $(comma),_,$(dot-target).dts.tmp)
 
+# qcdt - Tool to compile dtbs to QCDT format.
+#----------------------------------------------------------------------------
+quiet_cmd_qcdt = QCDT    $@
+cmd_qcdt = python2 $(srctree)/scripts/dtc/qcdtc/dtbtool.py \
+           $(shell echo $(dir $(filter-out FORCE,$^)) | sed 's/ .*//g') -o $@ -p scripts/dtc/
+
 # cat
 # ---------------------------------------------------------------------------
 # Concatentate multiple files together

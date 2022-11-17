@@ -520,9 +520,4 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt6589-aquaris5.dtb
 #used for cleaning - not building
 subdir- := qcom
 endif
-
-dtbs: $(addprefix $(obj)/, $(DTB_LIST))
-	$(Q)rm -f $(obj)/../*.dtb
-
-clean-files := *.dtb
-dtbs_install: $(addsuffix _dtbinst_, $(dtb-y))
+subdir-y += samsung/msm8917
