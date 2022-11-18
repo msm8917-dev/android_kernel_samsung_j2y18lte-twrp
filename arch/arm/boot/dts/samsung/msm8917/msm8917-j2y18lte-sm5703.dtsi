@@ -56,7 +56,7 @@
 			muic-universal,irq-gpio = <&tlmm 28 0x00>;
 			sm5703,wakeup;
 			muic-universal,chip_name = "sm,sm5703";
-			muic-universal,afc-support = <0>;
+			muic-universal,afc-support = <1>;
 			pinctrl-names = "muic_i2c_pins_default",
 				"muic_i2c_pins_active",
 				"muic_i2c_pins_suspend";
