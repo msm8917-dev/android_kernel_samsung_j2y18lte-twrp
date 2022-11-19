@@ -773,11 +773,6 @@ out:
 	kfree(n);
 	kfree(t);
 
-// [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-	selinux_enforcing = 1;
-#endif
-// ] SEC_SELINUX_PORTING_COMMON
 	if (!selinux_enforcing)
 		return 0;
 	return -EPERM;
@@ -864,6 +859,9 @@ int security_bounded_transition(u32 old_sid, u32 new_sid)
 	struct type_datum *type;
 	int index;
 	int rc;
+
+	if (!ss_initialized)
+		return 0;
 
 	read_lock(&policy_rwlock);
 
@@ -1414,26 +1412,24 @@ static int security_context_to_sid_core(const char *scontext, u32 scontext_len,
 	if (!scontext_len)
 		return -EINVAL;
 
+	/* Copy the string to allow changes and ensure a NUL terminator */
+	scontext2 = kmemdup_nul(scontext, scontext_len, gfp_flags);
+	if (!scontext2)
+		return -ENOMEM;
+
 	if (!ss_initialized) {
 		int i;
 
 		for (i = 1; i < SECINITSID_NUM; i++) {
-			if (!strcmp(initial_sid_to_string[i], scontext)) {
+			if (!strcmp(initial_sid_to_string[i], scontext2)) {
 				*sid = i;
-				return 0;
+				goto out;
 			}
 		}
 		*sid = SECINITSID_KERNEL;
-		return 0;
+		goto out;
 	}
 	*sid = SECSID_NULL;
-
-	/* Copy the string so that we can modify the copy as we parse it. */
-	scontext2 = kmalloc(scontext_len + 1, gfp_flags);
-	if (!scontext2)
-		return -ENOMEM;
-	memcpy(scontext2, scontext, scontext_len);
-	scontext2[scontext_len] = 0;
 
 	if (force) {
 		/* Save another copy for storing in uninterpreted form */
@@ -1448,7 +1444,7 @@ static int security_context_to_sid_core(const char *scontext, u32 scontext_len,
 				      scontext_len, &context, def_sid);
 	if (rc == -EINVAL && force) {
 		context.str = str;
-		context.len = scontext_len;
+		context.len = strlen(str) + 1;
 		str = NULL;
 	} else if (rc)
 		goto out_unlock;
@@ -1538,12 +1534,6 @@ out:
 	kfree(s);
 	kfree(t);
 	kfree(n);
-
-// [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-	selinux_enforcing = 1;
-#endif
-// ] SEC_SELINUX_PORTING_COMMON
 	if (!selinux_enforcing)
 		return 0;
 	return -EACCES;
@@ -1835,11 +1825,6 @@ static inline int convert_context_handle_invalid_context(struct context *context
 	char *s;
 	u32 len;
 
-// [ SEC_SELINUX_PORTING_COMMON
-#ifdef CONFIG_ALWAYS_ENFORCE
-	selinux_enforcing = 1;
-#endif
-// ] SEC_SELINUX_PORTING_COMMON
 	if (selinux_enforcing)
 		return -EINVAL;
 
@@ -2559,8 +2544,6 @@ int security_fs_use(struct super_block *sb)
 {
 	int rc = 0;
 	struct ocontext *c;
-	u32 tmpsid;
-
 	struct superblock_security_struct *sbsec = sb->s_security;
 	const char *fstype = sb->s_type->name;
 
@@ -2577,8 +2560,7 @@ int security_fs_use(struct super_block *sb)
 		sbsec->behavior = c->v.behavior;
 		if (!c->sid[0]) {
 			rc = sidtab_context_to_sid(&sidtab, &c->context[0],
-						   &tmpsid);
-			c->sid[0] = tmpsid;
+						   &c->sid[0]);
 			if (rc)
 				goto out;
 		}
