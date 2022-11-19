@@ -1698,8 +1698,8 @@ static void fastrpc_channel_close(struct kref *kref)
 	ctx->chan = 0;
 	mutex_unlock(&me->smd_mutex);
 	cid = ctx - &gcinfo[0];
-	pr_info("'closed /dev/%s c %d %d'\n", gcinfo[cid].name,
-						MAJOR(me->dev_no), cid);
+//	pr_info("'closed /dev/%s c %d %d'\n", gcinfo[cid].name,
+//						MAJOR(me->dev_no), cid);
 }
 
 static void fastrpc_context_list_dtor(struct fastrpc_file *fl);
@@ -1996,8 +1996,8 @@ static int fastrpc_device_open(struct inode *inode, struct file *filp)
 			goto bail;
 		}
 		kref_init(&me->channel[cid].kref);
-		pr_info("'opened /dev/%s c %d %d'\n", gcinfo[cid].name,
-						MAJOR(me->dev_no), cid);
+//		pr_info("'opened /dev/%s c %d %d'\n", gcinfo[cid].name,
+//						MAJOR(me->dev_no), cid);
 		if (me->channel[cid].ssrcount !=
 				 me->channel[cid].prevssrcount) {
 			if (fastrpc_mmap_remove_ssr(fl))
@@ -2120,8 +2120,8 @@ static int fastrpc_restart_notifier_cb(struct notifier_block *nb,
 				smd_close(ctx->chan);
 			}
 			ctx->chan = 0;
-			pr_info("'restart notifier: closed /dev/%s c %d %d'\n",
-				 gcinfo[cid].name, MAJOR(me->dev_no), cid);
+//			pr_info("'restart notifier: closed /dev/%s c %d %d'\n",
+//				 gcinfo[cid].name, MAJOR(me->dev_no), cid);
 		}
 		mutex_unlock(&me->smd_mutex);
 		fastrpc_notify_drivers(me, cid);
